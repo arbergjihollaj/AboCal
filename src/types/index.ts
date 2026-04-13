@@ -18,7 +18,7 @@ export interface ChunkingRules {
 export interface FlexibleTask {
   id: string;
   title: string;
-  subjectId: string;
+  subjectId?: string | null;
   totalDurationMinutes: number;
   deadline: Date;
   priority: 'high' | 'low';
@@ -55,5 +55,5 @@ export interface ScheduledTask {
   startTime: Date;
   endTime: Date;
   isFlexible: true;
-  subjectId: string;
+  subjectId?: string | null;
 }
