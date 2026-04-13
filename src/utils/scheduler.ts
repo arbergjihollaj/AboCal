@@ -1,7 +1,6 @@
 // src/utils/scheduler.ts
 import { StaticEvent, FlexibleTask, UserPreferences, ScheduledTask } from '../types';
 
-// Internal Interface for Time Slots
 interface TimeSlot {
   start: Date;
   end: Date;
@@ -12,7 +11,6 @@ interface TaskChunk {
   durationMinutes: number;
 }
 
-// 1. Helpers for White Space Analyse
 function parseTimeStr(timeStr: string, baseDate: Date): Date {
   const [hours, minutes] = timeStr.split(':').map(Number);
   const result = new Date(baseDate);
@@ -64,7 +62,6 @@ function getFreeSlots(activeStart: Date, activeEnd: Date, busySlots: TimeSlot[])
   return freeSlots;
 }
 
-// 2. Helpers for Chunking
 function chunkTasks(tasks: FlexibleTask[]): TaskChunk[] {
   const chunks: TaskChunk[] = [];
   for (const task of tasks) {
@@ -86,64 +83,77 @@ function chunkTasks(tasks: FlexibleTask[]): TaskChunk[] {
   return chunks;
 }
 
-// Main Algorithm Function - 4. Stateless Design
 export function generateDynamicSchedule(
-  targetDate: Date,
+  startDate: Date,
   staticEvents: StaticEvent[],
   flexibleTasks: FlexibleTask[],
   prefs: UserPreferences
 ): ScheduledTask[] {
-  const dayOfWeek = targetDate.getDay();
-  if (prefs.noStudyDays.includes(dayOfWeek)) {
-    return []; // No studying today!
-  }
+  
+  const allFreeSlots: TimeSlot[] = [];
 
-  // 1. White Space Analyse
-  const activeStart = parseTimeStr(prefs.activeHours.start, targetDate);
-  const activeEnd = parseTimeStr(prefs.activeHours.end, targetDate);
-  const busySlots: TimeSlot[] = [];
+  // Generate the 7 days of the week starting from startDate
+  for (let i = 0; i < 7; i++) {
+    const currentDay = new Date(startDate);
+    currentDay.setDate(currentDay.getDate() + i);
+    currentDay.setHours(0, 0, 0, 0);
 
-  // Add routines to busy slots
-  for (const r of prefs.routines) {
-    busySlots.push({
-      start: parseTimeStr(r.startTime, targetDate),
-      end: parseTimeStr(r.endTime, targetDate)
+    const dayOfWeek = currentDay.getDay(); // 0 is Sunday
+    if (prefs.noStudyDays.includes(dayOfWeek)) continue;
+
+    const activeStart = parseTimeStr(prefs.activeHours.start, currentDay);
+    const activeEnd = parseTimeStr(prefs.activeHours.end, currentDay);
+    const dailyBusySlots: TimeSlot[] = [];
+
+    // Add Routines for this day
+    for (const r of prefs.routines) {
+      dailyBusySlots.push({
+        start: parseTimeStr(r.startTime, currentDay),
+        end: parseTimeStr(r.endTime, currentDay)
+      });
+    }
+
+    // Find Custom StaticEvents for this specific day
+    const todaysEvents = staticEvents.filter(ev => {
+      const evStart = new Date(ev.startTime);
+      return evStart.getDate() === currentDay.getDate() && 
+             evStart.getMonth() === currentDay.getMonth() && 
+             evStart.getFullYear() === currentDay.getFullYear();
     });
+
+    for (const ev of todaysEvents) {
+      const startObj = new Date(ev.startTime);
+      const endObj = new Date(ev.endTime);
+
+      const bufferStart = ev.requiresTravelTime ? 60 : prefs.bufferMinutes;
+      const bufferEnd = ev.requiresTravelTime ? 60 : prefs.bufferMinutes;
+
+      startObj.setMinutes(startObj.getMinutes() - bufferStart);
+      endObj.setMinutes(endObj.getMinutes() + bufferEnd);
+      dailyBusySlots.push({ start: startObj, end: endObj });
+    }
+
+    const mergedBusy = mergeTimeSlots(dailyBusySlots);
+    const freeSlots = getFreeSlots(activeStart, activeEnd, mergedBusy);
+    allFreeSlots.push(...freeSlots);
   }
 
-  // Add static events to busy slots with buffer
-  for (const ev of staticEvents) {
-    const startObj = new Date(ev.startTime);
-    const endObj = new Date(ev.endTime);
-
-    // Apply buffer before and after static events
-    startObj.setMinutes(startObj.getMinutes() - prefs.bufferMinutes);
-    endObj.setMinutes(endObj.getMinutes() + prefs.bufferMinutes);
-
-    busySlots.push({ start: startObj, end: endObj });
-  }
-
-  const mergedBusy = mergeTimeSlots(busySlots);
-  const freeSlots = getFreeSlots(activeStart, activeEnd, mergedBusy);
-
-  // 2. Chunking
   const chunks = chunkTasks(flexibleTasks);
-
-  // 3. Matching
-  // Sort chunks by priority ('high' first) then deadline (earliest first)
+  
+  // Sort by priority -> deadline
   chunks.sort((a, b) => {
     if (a.task.priority === 'high' && b.task.priority === 'low') return -1;
     if (a.task.priority === 'low' && b.task.priority === 'high') return 1;
-    return a.task.deadline.getTime() - b.task.deadline.getTime();
+    return new Date(a.task.deadline).getTime() - new Date(b.task.deadline).getTime();
   });
 
   const schedule: ScheduledTask[] = [];
 
+  // Matching
   for (const chunk of chunks) {
-    for (let i = 0; i < freeSlots.length; i++) {
-      const slot = freeSlots[i];
+    for (let i = 0; i < allFreeSlots.length; i++) {
+      const slot = allFreeSlots[i];
       const slotDuration = (slot.end.getTime() - slot.start.getTime()) / 60000;
-
       const timeNeeded = chunk.durationMinutes;
 
       if (slotDuration >= timeNeeded) {
@@ -159,11 +169,9 @@ export function generateDynamicSchedule(
           subjectId: chunk.task.subjectId
         });
 
-        // 4. Update state / Domino-Effekt-Vorbereitung (stateless update)
-        // Shrink the free slot to make room for the next task
-        // We add the bufferMinutes AFTER each study chunk so there's a break
+        // Domino Effect Array Shrinking
         slot.start = new Date(chunkEnd.getTime() + prefs.bufferMinutes * 60000);
-        break; // Match found, break to next chunk
+        break; 
       }
     }
   }

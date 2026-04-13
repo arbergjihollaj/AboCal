@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String
+  colorCode String
+  textColor String
+
+  tasks     FlexibleTask[]
+}
+
+model StaticEvent {
+  id                 String   @id @default(cuid())
+  title              String
+  startTime          DateTime
+  endTime            DateTime
+  isStatic           Boolean  @default(true)
+  requiresTravelTime Boolean  @default(false)
+}
+
+model FlexibleTask {
+  id               String   @id @default(cuid())
+  title            String
+  duration         Int
+  deadline         DateTime
+  priority         String
+  minChunk         Int
+  maxChunk         Int
+
+  subjectId        String
+  subject          Subject  @relation(fields: [subjectId], references: [id])
+}

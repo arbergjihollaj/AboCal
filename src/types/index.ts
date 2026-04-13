@@ -7,6 +7,7 @@ export interface StaticEvent {
   endTime: Date;
   isStatic: true;
   requiresTravelTime: boolean;
+  subjectId?: string | null;
 }
 
 export interface ChunkingRules {

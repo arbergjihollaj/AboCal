@@ -1,0 +1,16 @@
+services:
+  abocal-web:
+    build: .
+    container_name: abocal-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Use an exact .env file mapped via git, or provide here
+      - NODE_ENV=production
+      # - DATABASE_URL=postgresql://user:pass@192.168.x.x:5432/abocal
+    env_file:
+      - .env
+    # Optional: if you have postgres locally in compose, define the dependency
+    # depends_on:
+    #   - db
