@@ -29,9 +29,27 @@ export default function CalendarView({
     return h;
   };
 
-  // Force 24h View (0 to 24)
-  const startHour = 0; 
-  const endHour = 24;     
+  // 1. Dynamic Viewport Calculation
+  let minH = 24;
+  let maxH = 0;
+
+  const checkBoundaries = (start: Date, end: Date) => {
+    const sH = start.getHours() + start.getMinutes() / 60;
+    const eH = end.getHours() + end.getMinutes() / 60;
+    if (sH < minH) minH = sH;
+    if (eH > maxH) maxH = eH;
+  };
+
+  staticEvents.forEach(e => checkBoundaries(new Date(e.startTime), new Date(e.endTime)));
+  scheduledTasks.forEach(t => checkBoundaries(new Date(t.startTime), new Date(t.endTime)));
+
+  if (minH === 24 && maxH === 0) {
+    minH = 8;
+    maxH = 18;
+  }
+
+  const startHour = Math.max(0, Math.floor(minH) - 1);
+  const endHour = Math.min(24, Math.ceil(maxH) + 1);
   const totalHours = endHour - startHour;
 
   // Live Current Time State
@@ -78,22 +96,22 @@ export default function CalendarView({
   };
 
   return (
-    <div className="w-full bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200 overflow-hidden">
+    <div className="w-full bg-white dark:bg-[#121212] rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-2xl border border-slate-200 dark:border-white/5 overflow-hidden transition-colors duration-300">
       
       {/* 7-Tage Header Reihe - Clean Design */}
-      <div className="flex border-b border-slate-100 bg-slate-50/50">
-        <div className="w-14 flex-shrink-0 border-r border-slate-100" />
+      <div className="flex border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-[#171717]">
+        <div className="w-14 flex-shrink-0 border-r border-slate-100 dark:border-white/5" />
         <div className="flex-1 grid grid-cols-7">
           {daysList.map((day, idx) => (
-            <div key={idx} className="text-center py-4 border-r border-slate-100 last:border-0 relative">
-               <div className={`text-[10px] font-bold tracking-widest uppercase mb-1.5 ${isSameDay(day, new Date()) ? 'text-blue-500' : 'text-slate-400'}`}>
+            <div key={idx} className="text-center py-4 border-r border-slate-100 dark:border-white/5 last:border-0 relative">
+               <div className={`text-[10px] font-bold tracking-widest uppercase mb-1.5 ${isSameDay(day, new Date()) ? 'text-blue-500 dark:text-emerald-400' : 'text-slate-400 dark:text-zinc-500'}`}>
                  {dayNames[day.getDay()]}
                </div>
-               <div className={`text-xl font-semibold tracking-tight ${isSameDay(day, new Date()) ? 'text-blue-600' : 'text-slate-700'}`}>
+               <div className={`text-xl font-semibold tracking-tight ${isSameDay(day, new Date()) ? 'text-blue-600 dark:text-emerald-400' : 'text-slate-700 dark:text-zinc-200'}`}>
                  {day.getDate()}
                </div>
                {isSameDay(day, new Date()) && (
-                  <motion.div layoutId="today-indicator" className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-blue-500 rounded-t-full" />
+                  <motion.div layoutId="today-indicator" className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-blue-500 dark:bg-emerald-400 rounded-t-full" />
                )}
             </div>
           ))}
@@ -102,11 +120,11 @@ export default function CalendarView({
 
       <div className="relative flex">
         {/* Time Axis */}
-        <div className="w-14 flex-shrink-0 border-r border-slate-100 relative z-20 bg-slate-50/30">
+        <div className="w-14 flex-shrink-0 border-r border-slate-100 dark:border-white/5 relative z-20 bg-slate-50/30 dark:bg-[#121212]">
           {hoursList.map((hour) => (
             <div 
               key={hour} 
-              className="text-[10px] font-semibold text-slate-400 text-center relative"
+              className="text-[10px] font-semibold tracking-wide text-slate-400 dark:text-zinc-600 text-center relative"
               style={{ height: `${PIXELS_PER_HOUR}px`, top: '-7px' }}
             >
               {String(hour).padStart(2, '0')}:00
@@ -121,7 +139,7 @@ export default function CalendarView({
             {hoursList.slice(0, -1).map((hour, idx) => (
               <div 
                 key={hour}
-                className="absolute w-full border-t border-slate-100"
+                className="absolute w-full border-t border-slate-100 dark:border-white/5"
                 style={{ top: `${idx * PIXELS_PER_HOUR}px` }}
               />
             ))}
@@ -138,7 +156,7 @@ export default function CalendarView({
               const isStudyDay = !prefs.noStudyDays.includes(dayOfWeek);
 
               return (
-                <div key={dayIdx} className="relative border-r border-slate-100 last:border-0 h-full p-1.5 snap-start scroll-ml-[56px] md:scroll-ml-0">
+                <div key={dayIdx} className="relative border-r border-slate-100 dark:border-white/5 last:border-0 h-full p-1.5 snap-start scroll-ml-[56px] md:scroll-ml-0">
                   
                   {/* Live Indicator (Current Time Line) */}
                   {isSameDay(currentDay, currentTime) && (
@@ -155,7 +173,7 @@ export default function CalendarView({
                       <div className="flex-1 h-[2px] bg-red-500" />
                     </div>
                   )}
-                  
+
                   {isStudyDay && prefs.routines.map((routine, idx) => {
                      const [stHr, stMin] = routine.startTime.split(':').map(Number);
                      const [enHr, enMin] = routine.endTime.split(':').map(Number);
@@ -169,10 +187,10 @@ export default function CalendarView({
                      return (
                        <div
                          key={`routine-${idx}`}
-                         className="absolute left-1.5 right-1.5 bg-slate-50 border border-slate-200 border-dashed flex items-center justify-center rounded-2xl pointer-events-none overflow-hidden"
+                         className="absolute left-1.5 right-1.5 bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 border-dashed flex items-center justify-center rounded-2xl pointer-events-none overflow-hidden"
                          style={{ top: `${pos.top}px`, height: `${pos.height}px`, zIndex: 1 }}
                        >
-                         <span className="text-[10px] font-semibold text-slate-400 tracking-wide uppercase">{routine.title}</span>
+                         <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500/40 tracking-wide uppercase">{routine.title}</span>
                        </div>
                      );
                   })}
@@ -182,8 +200,15 @@ export default function CalendarView({
                     if (pos.height <= 0) return null;
                     
                     const subject = subjects.find(s => s.id === event.subjectId);
-                    const bgColor = subject?.colorCode ? subject.colorCode.replace('0.15', '0.08') : '#f8fafc'; // Extra Light for Clean Design
-                    const textColor = subject?.textColor || '#475569';
+                    // CSS Variable basierter Color Code (oder dark-mode check via Klasse? Wir nutzen opacity)
+                    // Um es generisch zu machen, können wir den ColorCode im Dark Mode intakt lassen.
+                    // Da wir im Modal kein 'isDark' state haben (nur CSS Klasse), stylen wir den Container via parent cascade (schwer bei Inline Style).
+                    // Trick: rgba( , 0.15) sieht in beiden ok aus, aber in plain white besser mit 0.08. 
+                    // Wir nutzen eine custom classe `.dark` über `global.css`... hier setzen wir einfach solid color!
+                    
+                    const isDarkTheme = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+                    const bgColor = subject?.colorCode ? (isDarkTheme ? subject.colorCode : subject.colorCode.replace('0.15', '0.08')) : (isDarkTheme ? '#1F2937' : '#f8fafc');
+                    const textColor = subject?.textColor || (isDarkTheme ? 'white' : '#475569');
                     
                     return (
                       <motion.div
@@ -191,7 +216,7 @@ export default function CalendarView({
                         onDoubleClick={() => setEditingTask({ type: 'static', data: event })}
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                        className="absolute left-1.5 right-1.5 rounded-[18px] shadow-sm flex flex-col justify-start overflow-hidden z-20 cursor-pointer"
+                        className="absolute left-1.5 right-1.5 rounded-[18px] shadow-sm flex flex-col justify-start overflow-hidden z-20 cursor-pointer border border-transparent dark:border-white/10 dark:backdrop-blur-md"
                         style={{ 
                           top: `${pos.top}px`, 
                           height: `${pos.height}px`,
@@ -210,8 +235,9 @@ export default function CalendarView({
                     if (pos.height <= 0) return null;
                     
                     const subject = subjects.find(s => s.id === task.subjectId);
-                    const bgColor = subject?.colorCode ? subject.colorCode.replace('0.15', '0.08') : '#f8fafc'; // Extra light pastel
-                    const textColor = subject?.textColor || '#475569';
+                    const isDarkTheme = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+                    const bgColor = subject?.colorCode ? (isDarkTheme ? subject.colorCode : subject.colorCode.replace('0.15', '0.08')) : (isDarkTheme ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc');
+                    const textColor = subject?.textColor || (isDarkTheme ? '#d4d4d8' : '#475569');
 
                     return (
                       <motion.div
@@ -224,7 +250,7 @@ export default function CalendarView({
                         }}
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                        className="absolute left-1.5 right-1.5 rounded-[18px] shadow-sm flex flex-col justify-start overflow-hidden z-30 cursor-pointer"
+                        className="absolute left-1.5 right-1.5 rounded-[18px] shadow-sm flex flex-col justify-start overflow-hidden z-30 cursor-pointer border border-transparent dark:border-white/10 dark:backdrop-blur-xl"
                         style={{ 
                           top: `${pos.top}px`, 
                           height: `${pos.height}px`, 

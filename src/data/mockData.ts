@@ -25,9 +25,7 @@ export const subjects: Subject[] = [
 
 export const dummyPrefs: UserPreferences = {
   activeHours: { start: "08:00", end: "22:00" },
-  routines: [
-    { title: "Morning Routine", startTime: "08:00", endTime: "09:00" }
-  ],
+  routines: [],
   noStudyDays: [0], // 0 = Sonntag
   bufferMinutes: 15
 };

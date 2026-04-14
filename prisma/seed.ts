@@ -53,7 +53,7 @@ async function main() {
      // ================= STATISCHE VORLESUNGEN (Anker) =================
      await prisma.staticEvent.create({
        data: {
-         title: 'Vorlesung Betriebssysteme',
+         title: 'Betriebssysteme',
          startTime: createDate(w, 1, 11, 30), // Di 11:30 (Beispiel User Prompt)
          endTime: createDate(w, 1, 13, 0),
          requiresTravelTime: true,
@@ -64,7 +64,7 @@ async function main() {
 
      await prisma.staticEvent.create({
        data: {
-         title: 'Vorlesung Algorithmen',
+         title: 'Algorithmen',
          startTime: createDate(w, 3, 13, 15), // Do 13:15
          endTime: createDate(w, 3, 15, 0),
          requiresTravelTime: true,
@@ -75,7 +75,7 @@ async function main() {
 
      await prisma.staticEvent.create({
        data: {
-         title: 'Vorlesung Mathe 2',
+         title: 'Mathe 2',
          startTime: createDate(w, 0, 10, 0), // Mo 10:00 (Angenommen)
          endTime: createDate(w, 0, 11, 30),
          requiresTravelTime: true,
@@ -86,7 +86,7 @@ async function main() {
 
      await prisma.staticEvent.create({
        data: {
-         title: 'Vorlesung Prog 2',
+         title: 'Prog 2',
          startTime: createDate(w, 2, 9, 30), // Mi 9:30 (Angenommen)
          endTime: createDate(w, 2, 11, 30),
          requiresTravelTime: true,

@@ -24,6 +24,8 @@ export const metadata: Metadata = {
   description: "Dynamic Calendar with Tetris Algorithm for students",
 };
 
+import { ThemeProvider } from "../src/components/ThemeProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,10 +33,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="de"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col transition-colors duration-300 bg-stone-50 dark:bg-[#121212]">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

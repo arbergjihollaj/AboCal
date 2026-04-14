@@ -8,6 +8,8 @@ import { StaticEvent, FlexibleTask, Subject } from '../src/types';
 
 export const revalidate = 0; // Ensure fresh data on nav or reload
 
+import SettingsButton from '../src/components/SettingsButton';
+
 function getMonday(d: Date) {
   const date = new Date(d);
   date.setHours(0, 0, 0, 0);
@@ -90,7 +92,7 @@ export default async function Home(props: { searchParams: Promise<{ w?: string }
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-stone-50 font-sans pb-16 text-slate-900">
+    <div className="flex flex-col min-h-screen bg-stone-50 dark:bg-[#121212] font-sans pb-16 text-slate-900 transition-colors duration-300">
       <header className="w-full max-w-[1400px] mx-auto pt-10 pb-8 px-4 lg:px-6 relative">
         {/* Top Header Row: Pfeil Links, KW Zentriert, Pfeil/Tools Rechts */}
         <div className="flex items-center justify-between mb-2">
@@ -99,7 +101,7 @@ export default async function Home(props: { searchParams: Promise<{ w?: string }
           <div className="flex items-center">
             <Link 
               href={`/?w=${offset - 1}`} 
-              className="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-500 hover:text-slate-900 hover:shadow-md transition-all flex items-center justify-center group"
+              className="p-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm text-slate-500 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-200 hover:shadow-md transition-all flex items-center justify-center group"
               title="Vorherige Woche"
             >
               <span className="group-hover:-translate-x-1 transition-transform">&larr;</span>
@@ -107,17 +109,20 @@ export default async function Home(props: { searchParams: Promise<{ w?: string }
           </div>
 
           {/* Mitte - KW */}
-          <div className="flex flex-col items-center justify-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">
+          <div className="flex flex-col items-center justify-center relative">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-zinc-100">
               KW {getWeekNumber(weekStartMonday)}
             </h1>
-            {/* Heute Button direkt unter der Headline */}
-            <Link 
-              href="/?w=0"
-              className="mt-2 text-[11px] font-bold tracking-widest uppercase bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-200 px-4 py-1.5 rounded-full transition-colors"
-            >
-              Heute
-            </Link>
+            {/* Heute Button und Settings direkt unter der Headline */}
+            <div className="mt-2 flex items-center gap-2">
+              <Link 
+                href="/?w=0"
+                className="text-[11px] font-bold tracking-widest uppercase bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/5 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white px-4 py-1.5 rounded-full transition-colors flex items-center justify-center"
+              >
+                Heute
+              </Link>
+              <SettingsButton />
+            </div>
           </div>
 
           {/* Pfeil Nächste - Äußerster Rand Rechts inkl Tools */}
