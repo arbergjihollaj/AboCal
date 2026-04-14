@@ -16,28 +16,28 @@ function getMonday(d: Date) {
 }
 
 async function main() {
-  console.log('Starte Seeding mit dem expliziten Intensiv-Wochenplan...');
+  console.log('Starte Seeding mit dem Clean-Design Flow (Spaced Repetition)...');
 
-  // Tabellen löschen (Reihenfolge wichtig wg. Relationen)
+  // Tabellen löschen
   await prisma.flexibleTask.deleteMany({});
   await prisma.staticEvent.deleteMany({});
   await prisma.subject.deleteMany({});
 
-  // 1. Subjects anlegen (Pastel Dark-Mode Colors)
+  // 1. Subjects anlegen (Dark/Light kompatibel, hier für Clean Design)
   const subOs = await prisma.subject.create({
-    data: { id: 'os', name: 'Betriebssysteme', colorCode: 'rgba(225, 29, 72, 0.15)', textColor: '#fb7185' } // Rose
+    data: { id: 'os', name: 'Betriebssysteme', colorCode: 'rgba(244, 63, 94, 0.15)', textColor: '#e11d48' } // Rose stark für Light Mode Text
   });
   const subMath = await prisma.subject.create({
-    data: { id: 'math', name: 'Mathe 2', colorCode: 'rgba(79, 70, 229, 0.15)', textColor: '#818cf8' } // Indigo
+    data: { id: 'math', name: 'Mathe 2', colorCode: 'rgba(99, 102, 241, 0.15)', textColor: '#4f46e5' } // Indigo starik
   });
   const subProg = await prisma.subject.create({
-    data: { id: 'prog', name: 'Prog 2', colorCode: 'rgba(13, 148, 136, 0.15)', textColor: '#2dd4bf' } // Teal
+    data: { id: 'prog', name: 'Prog 2', colorCode: 'rgba(20, 184, 166, 0.15)', textColor: '#0d9488' } // Teal stark
   });
   const subAlgo = await prisma.subject.create({
-    data: { id: 'algo', name: 'Algorithmen', colorCode: 'rgba(217, 119, 6, 0.15)', textColor: '#fbbf24' } // Amber
+    data: { id: 'algo', name: 'Algorithmen', colorCode: 'rgba(245, 158, 11, 0.15)', textColor: '#d97706' } // Amber stark
   });
   const subSoft = await prisma.subject.create({
-    data: { id: 'soft', name: 'Soft Skills', colorCode: 'rgba(124, 58, 237, 0.15)', textColor: '#a78bfa' } // Violet
+    data: { id: 'soft', name: 'Soft Skills', colorCode: 'rgba(139, 92, 246, 0.15)', textColor: '#7c3aed' } // Violet stark
   });
 
   const monday = getMonday(new Date());
@@ -50,177 +50,119 @@ async function main() {
   };
 
   for (let w = 0; w < 4; w++) {
-     // ================= MONTAG =================
+     // ================= STATISCHE VORLESUNGEN (Anker) =================
      await prisma.staticEvent.create({
        data: {
-         title: 'Mathe 2 – Quiz bearbeiten & Vorlesung nachbereiten',
-         startTime: createDate(w, 0, 13, 0),
-         endTime: createDate(w, 0, 15, 0),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subMath.id
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Prog 2 – Testate (Teil 1: Implementierung)',
-         startTime: createDate(w, 0, 15, 30),
-         endTime: createDate(w, 0, 18, 0),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subProg.id
-       }
-     });
-
-     // ================= DIENSTAG =================
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Prog 2 – Testate (Teil 2: Finalisierung & Abgabe)',
-         startTime: createDate(w, 1, 8, 0),
-         endTime: createDate(w, 1, 9, 15),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subProg.id
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Vorlesungen (Prog 2 / Mathe 2)',
-         startTime: createDate(w, 1, 9, 45),
+         title: 'Vorlesung Betriebssysteme',
+         startTime: createDate(w, 1, 11, 30), // Di 11:30 (Beispiel User Prompt)
          endTime: createDate(w, 1, 13, 0),
          requiresTravelTime: true,
          isStatic: true,
-         subjectId: subProg.id // Combined? we just use prog color for now
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'NW Betriebssysteme – Theorie & Begriffe',
-         startTime: createDate(w, 1, 13, 15),
-         endTime: createDate(w, 1, 14, 45),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subOs.id
-       }
-     });
-
-     // Nur visuell, kein Event
-     await prisma.staticEvent.create({
-       data: {
-         title: '🚨 Abgabe-Deadline (Prog/Mathe)',
-         startTime: createDate(w, 1, 15, 0),
-         endTime: createDate(w, 1, 15, 15),
-         requiresTravelTime: false,
-         isStatic: true,
-       }
-     });
-
-     // ================= MITTWOCH =================
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Vorlesungen (Soft Skills / Betriebssysteme)',
-         startTime: createDate(w, 2, 8, 0),
-         endTime: createDate(w, 2, 11, 30),
-         requiresTravelTime: true,
-         isStatic: true,
          subjectId: subOs.id
        }
      });
 
      await prisma.staticEvent.create({
        data: {
-         title: 'NW Soft Skills – Quiz-Vorbereitung',
-         startTime: createDate(w, 2, 12, 0),
-         endTime: createDate(w, 2, 14, 0),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subSoft.id
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'NW Mathe 2 – Übungsblätter & Theorie',
-         startTime: createDate(w, 2, 14, 30),
-         endTime: createDate(w, 2, 16, 30),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subMath.id
-       }
-     });
-
-     // ================= DONNERSTAG =================
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Vorlesungen (Mathe 2 / Algorithmen)',
-         startTime: createDate(w, 3, 8, 0),
-         endTime: createDate(w, 3, 11, 15),
+         title: 'Vorlesung Algorithmen',
+         startTime: createDate(w, 3, 13, 15), // Do 13:15
+         endTime: createDate(w, 3, 15, 0),
          requiresTravelTime: true,
-         isStatic: true,
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Soft Skills – Quiz-Abgabe & Pufferzeit',
-         startTime: createDate(w, 3, 11, 15),
-         endTime: createDate(w, 3, 13, 0),
-         requiresTravelTime: false,
-         isStatic: true,
-         subjectId: subSoft.id
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'Vorlesungen (Algorithmen / Prog 2)',
-         startTime: createDate(w, 3, 13, 15),
-         endTime: createDate(w, 3, 17, 15),
-         requiresTravelTime: true,
-         isStatic: true,
-       }
-     });
-
-     await prisma.staticEvent.create({
-       data: {
-         title: 'NW Algorithmen & Datenstrukturen – Code testen',
-         startTime: createDate(w, 3, 17, 15),
-         endTime: createDate(w, 3, 19, 0),
-         requiresTravelTime: false,
          isStatic: true,
          subjectId: subAlgo.id
        }
      });
 
-     // ================= FREITAG =================
      await prisma.staticEvent.create({
        data: {
-         title: 'NW Programmierung 2 – Reflektion',
-         startTime: createDate(w, 4, 10, 0),
-         endTime: createDate(w, 4, 12, 0),
-         requiresTravelTime: false,
+         title: 'Vorlesung Mathe 2',
+         startTime: createDate(w, 0, 10, 0), // Mo 10:00 (Angenommen)
+         endTime: createDate(w, 0, 11, 30),
+         requiresTravelTime: true,
+         isStatic: true,
+         subjectId: subMath.id
+       }
+     });
+
+     await prisma.staticEvent.create({
+       data: {
+         title: 'Vorlesung Prog 2',
+         startTime: createDate(w, 2, 9, 30), // Mi 9:30 (Angenommen)
+         endTime: createDate(w, 2, 11, 30),
+         requiresTravelTime: true,
          isStatic: true,
          subjectId: subProg.id
        }
      });
 
-     await prisma.staticEvent.create({
+     // ================= FLEXIBLE LERNAUFGABEN (Flow & Spaced Repetition) =================
+
+     // Prog 2 Testate & Mathe Quiz -> Deadline: Dienstag 23:59. Hohe Prio zwingt sie auf Mo/Di!
+     await prisma.flexibleTask.create({
        data: {
-         title: 'Review – Check der kommenden Woche',
-         startTime: createDate(w, 4, 12, 0),
-         endTime: createDate(w, 4, 14, 0),
-         requiresTravelTime: false,
-         isStatic: true,
-         // No subject assigned intentionally for variety (general tasks)
+         title: `Prog 2 Testate (Teil 1 & 2)`,
+         subjectId: subProg.id,
+         duration: 180, // 3h total
+         minChunk: 60,
+         maxChunk: 120, // Tetris teilt es automatisch auf
+         priority: 'high',
+         deadline: createDate(w, 1, 23, 59), // Dienstag
        }
      });
-     
+
+     await prisma.flexibleTask.create({
+       data: {
+         title: `Mathe Quiz (Woche ${w+1})`,
+         subjectId: subMath.id,
+         duration: 90, 
+         minChunk: 45,
+         maxChunk: 90,
+         priority: 'high',
+         deadline: createDate(w, 1, 23, 59), // Dienstag
+       }
+     });
+
+     // Soft Skills Quiz Vorbereitung -> Soll Mittwoch stattfinden, Quiz ist Donnerstag (Angenommen Do 10:00)
+     await prisma.flexibleTask.create({
+       data: {
+         title: `Soft Skills Vorbereitung`,
+         subjectId: subSoft.id,
+         duration: 120, 
+         minChunk: 60,
+         maxChunk: 120,
+         priority: 'high',
+         deadline: createDate(w, 3, 9, 0), // Donnerstag früh fällig -> rutscht auf Mittwoch!
+       }
+     });
+
+     // Spaced Repetition: Mathe Nacharbeit -> Soll bewusst Freitag/Samstag stattfinden.
+     // Trick: Prio Low, Deadline späte Woche (Samstag).
+     await prisma.flexibleTask.create({
+       data: {
+         title: `Mathe NW (Spaced Repetition)`,
+         subjectId: subMath.id,
+         duration: 120, 
+         minChunk: 60,
+         maxChunk: 90,
+         priority: 'low', // Low Priority drückt es nach hinten
+         deadline: createDate(w, 5, 23, 59), // Samstag Abend
+       }
+     });
+
+     // Allgemeine Weekly Review (Immer am Ende der Woche)
+     await prisma.flexibleTask.create({
+       data: {
+         title: `Wochen-Review & Planung`,
+         duration: 60, 
+         minChunk: 60,
+         maxChunk: 60,
+         priority: 'low',
+         deadline: createDate(w, 6, 20, 0), // Sonntag Abend
+       }
+     });
   }
 
-  console.log('Stundenplan mit festen, farbigen Lern-Blöcken erfolgreich gesät!');
+  console.log('Stundenplan im Clean-Flow Format erfolgreich gesät!');
 }
 
 main()

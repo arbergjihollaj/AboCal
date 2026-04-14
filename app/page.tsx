@@ -16,6 +16,13 @@ function getMonday(d: Date) {
   return new Date(date.setDate(diff));
 }
 
+function getWeekNumber(d: Date) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay()||7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
+}
+
 export default async function Home(props: { searchParams: Promise<{ w?: string }> }) {
   const searchParams = await props.searchParams;
   const offset = parseInt(searchParams.w || '0', 10);
@@ -83,48 +90,57 @@ export default async function Home(props: { searchParams: Promise<{ w?: string }
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212] font-sans pb-16 text-zinc-100">
-      <header className="w-full max-w-[1200px] mx-auto pt-10 pb-6 px-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-2">
+    <div className="flex flex-col min-h-screen bg-stone-50 font-sans pb-16 text-slate-900">
+      <header className="w-full max-w-[1400px] mx-auto pt-10 pb-8 px-4 lg:px-6 relative">
+        {/* Top Header Row: Pfeil Links, KW Zentriert, Pfeil/Tools Rechts */}
+        <div className="flex items-center justify-between mb-2">
           
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-4">
-              AboCal
-            </h1>
-            
-            {/* Status Indicator */}
-            <div className="flex items-center gap-2.5 bg-white/5 pl-2 pr-3 py-1.5 rounded-full border border-white/10" title={isConnected ? "Homelab erreichbar" : "Homelab Offline"}>
-              <div className="relative flex h-2 w-2 ml-1">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'bg-emerald-400' : 'bg-red-500'}`}></span>
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${isConnected ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`}></span>
-              </div>
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mt-[1px]">Homelab</span>
-            </div>
+          {/* Pfeil Zurück - Äußerster Rand Links */}
+          <div className="flex items-center">
+            <Link 
+              href={`/?w=${offset - 1}`} 
+              className="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-500 hover:text-slate-900 hover:shadow-md transition-all flex items-center justify-center group"
+              title="Vorherige Woche"
+            >
+              <span className="group-hover:-translate-x-1 transition-transform">&larr;</span>
+            </Link>
           </div>
-          
-          <div className="shrink-0 flex items-center gap-4">
-            <div className="flex bg-white/5 p-1 rounded-xl shadow-inner mr-2 md:mr-4 border border-white/5">
-              <Link 
-                href={`/?w=${offset - 1}`} 
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Vorherige Woche"
-              >
-                &larr;
-              </Link>
-              <div className="px-3 py-1.5 min-w-[90px] text-center text-sm font-medium text-emerald-400">
-                {offset === 0 ? "Aktuell" : offset > 0 ? `+${offset} Woche` : `${offset} Woche`}
+
+          {/* Mitte - KW */}
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">
+              KW {getWeekNumber(weekStartMonday)}
+            </h1>
+            {/* Heute Button direkt unter der Headline */}
+            <Link 
+              href="/?w=0"
+              className="mt-2 text-[11px] font-bold tracking-widest uppercase bg-slate-100 border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-200 px-4 py-1.5 rounded-full transition-colors"
+            >
+              Heute
+            </Link>
+          </div>
+
+          {/* Pfeil Nächste - Äußerster Rand Rechts inkl Tools */}
+          <div className="flex items-center gap-3">
+             {/* Status Indicator Clean */}
+             <div className="hidden sm:flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm" title={isConnected ? "Homelab erreichbar" : "Homelab Offline"}>
+              <div className="relative flex h-2 w-2">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isConnected ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
               </div>
-              <Link 
-                href={`/?w=${offset + 1}`} 
-                className="px-3 py-1.5 text-sm font-medium rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-                title="Nächste Woche"
-              >
-                &rarr;
-              </Link>
             </div>
 
             {isConnected && <TaskFormModal subjects={subjects} />}
+
+            <Link 
+              href={`/?w=${offset + 1}`} 
+              className="p-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-slate-500 hover:text-slate-900 hover:shadow-md transition-all flex items-center justify-center group"
+              title="Nächste Woche"
+            >
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </Link>
           </div>
+
         </div>
       </header>
       
